@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	machinePath = "/machines"
+	machinesPath = "/machines"
 )
 
 type Machine struct {
@@ -22,7 +22,7 @@ type machinesResponse struct {
 func (c *Client) Machines() ([]Machine, error) {
 	var mRes machinesResponse
 
-	req, err := http.NewRequest("GET", c.URL+basePath+machinePath, nil)
+	req, err := http.NewRequest("GET", c.URL+basePath+machinesPath, nil)
 	if err != nil {
 		return nil, err
 	}
