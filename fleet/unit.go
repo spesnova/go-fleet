@@ -3,6 +3,8 @@ package fleet
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -54,8 +56,8 @@ func (c *Client) Units() ([]Unit, error) {
 
 func (c *Client) Submit(name string, opts []*UnitOption) error {
 	unit := Unit{
-		Options:     opts,
-		DesireState: "inactive",
+		Options:      opts,
+		DesiredState: "inactive",
 	}
 
 	j, err := json.Marshal(unit)
@@ -83,7 +85,44 @@ func (c *Client) Submit(name string, opts []*UnitOption) error {
 	return nil
 }
 
-func (c *Client) Load(name string)    {}
+func (c *Client) Load(name string) error {
+	unit := Unit{
+		DesiredState: "loaded",
+	}
+
+	j, err := json.Marshal(unit)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("PUT", c.URL+basePath+unitsPath+"/"+name, bytes.NewReader(j))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	httpClient := http.Client{}
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	switch res.StatusCode {
+	case 204:
+		return nil
+	case 400:
+		// Attempting to modify an Unit with an invalid entity
+		return errors.New("400 Bad Request")
+	case 409:
+		// Attempting to create an entity without options
+		return errors.New("409 Conflict")
+	default:
+		message := fmt.Sprintf("%d Faild to load an unit", res.StatusCode)
+		return errors.New(message)
+	}
+}
+
 func (c *Client) Start(name string)   {}
 func (c *Client) Stop(name string)    {}
 func (c *Client) Unload(name string)  {}
