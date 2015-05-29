@@ -24,7 +24,33 @@ type UnitOption struct {
 	Value   string `json:"value,omitempty"`
 }
 
-func (c *Client) Units() {}
+type unitResponse struct {
+	Units []Unit `json:"units,omitempty"`
+}
+
+func (c *Client) Units() ([]Unit, error) {
+	var unitsRes unitResponse
+
+	req, err := http.NewRequest("GET", c.URL+basePath+unitsPath, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	httpClient := http.Client{}
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	err = json.NewDecoder(res.Body).Decode(&unitsRes)
+	if err != nil {
+		return nil, err
+	}
+
+	return unitsRes.Units, nil
+}
 
 func (c *Client) Submit(name string, opts []*UnitOption) error {
 	unit := Unit{
