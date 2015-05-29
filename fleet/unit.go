@@ -13,7 +13,7 @@ const (
 type Unit struct {
 	Name         string        `json:"name,omitempty"`
 	Options      []*UnitOption `json:"options,omitempty"`
-	DesireState  string        `json:"desireState,omitempty"`
+	DesiredState string        `json:"desiredState,omitempty"`
 	CurrentState string        `json:"currentState,omitempty"`
 	MachineID    string        `json:"machineID,omitempty"`
 }
