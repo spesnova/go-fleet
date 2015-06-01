@@ -54,18 +54,25 @@ func (c *Client) Units() ([]Unit, error) {
 	return unitsRes.Units, nil
 }
 
-func (c *Client) Submit(name string, opts []*UnitOption) error {
-	unit := Unit{
-		Options:      opts,
-		DesiredState: "inactive",
+// createOrUpdateUnit creates or updates an unit
+func (c *Client) createOrUpdateUnit(u Unit) error {
+	switch u.DesiredState {
+	case "inactive":
+		break
+	case "loaded":
+		break
+	case "launched":
+		break
+	default:
+		return errors.New("Invalid desired state")
 	}
 
-	j, err := json.Marshal(unit)
+	j, err := json.Marshal(u)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("PUT", c.URL+basePath+unitsPath+"/"+name, bytes.NewReader(j))
+	req, err := http.NewRequest("PUT", c.URL+basePath+unitsPath+"/"+u.Name, bytes.NewReader(j))
 	if err != nil {
 		return err
 	}
@@ -78,15 +85,15 @@ func (c *Client) Submit(name string, opts []*UnitOption) error {
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode == 201 {
-		return nil
-	}
-
 	switch res.StatusCode {
 	case 201:
+		// Created successfully
+		return nil
+	case 204:
+		// Modified successfully
 		return nil
 	case 400:
-		// Attempting to create an Unit with an invalid entity
+		// Attempting to create/modify an Unit with an invalid entity
 		return errors.New("400 Bad Request")
 	case 409:
 		// Attempting to create an entity without options
@@ -99,45 +106,34 @@ func (c *Client) Submit(name string, opts []*UnitOption) error {
 	return nil
 }
 
+func (c *Client) Submit(name string, opts []*UnitOption, targetState string) error {
+	unit := Unit{
+		Name:         name,
+		Options:      opts,
+		DesiredState: targetState,
+	}
+
+	return c.createOrUpdateUnit(unit)
+}
+
 func (c *Client) Load(name string) error {
 	unit := Unit{
+		Name:         name,
 		DesiredState: "loaded",
 	}
 
-	j, err := json.Marshal(unit)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest("PUT", c.URL+basePath+unitsPath+"/"+name, bytes.NewReader(j))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	httpClient := http.Client{}
-	res, err := httpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	switch res.StatusCode {
-	case 204:
-		return nil
-	case 400:
-		// Attempting to modify an Unit with an invalid entity
-		return errors.New("400 Bad Request")
-	case 409:
-		// Attempting to create an entity without options
-		return errors.New("409 Conflict")
-	default:
-		message := fmt.Sprintf("%d Faild to load an unit", res.StatusCode)
-		return errors.New(message)
-	}
+	return c.createOrUpdateUnit(unit)
 }
 
-func (c *Client) Start(name string)   {}
+func (c *Client) Start(name string) error {
+	unit := Unit{
+		Name:         name,
+		DesiredState: "launched",
+	}
+
+	return c.createOrUpdateUnit(unit)
+}
+
 func (c *Client) Stop(name string)    {}
 func (c *Client) Unload(name string)  {}
 func (c *Client) Destroy(name string) {}
