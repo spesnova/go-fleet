@@ -143,5 +143,13 @@ func (c *Client) Stop(name string) error {
 	return c.createOrUpdateUnit(unit)
 }
 
-func (c *Client) Unload(name string)  {}
+func (c *Client) Unload(name string) error {
+	unit := Unit{
+		Name:         name,
+		DesiredState: "inactive",
+	}
+
+	return c.createOrUpdateUnit(unit)
+}
+
 func (c *Client) Destroy(name string) {}
