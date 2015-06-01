@@ -106,6 +106,36 @@ func (c *Client) createOrUpdateUnit(u Unit) error {
 	return nil
 }
 
+func (c *Client) deleteUnit(name string) error {
+	req, err := http.NewRequest("DELETE", c.URL+basePath+unitsPath+"/"+name, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	httpClient := http.Client{}
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	switch res.StatusCode {
+	case 204:
+		// Deleted successfully
+		return nil
+	case 404:
+		// The indicated Unit does not exist
+		return errors.New("400 Bad Request")
+	default:
+		message := fmt.Sprintf("%d Faild to delete an unit", res.StatusCode)
+		return errors.New(message)
+	}
+
+	return nil
+
+}
+
 func (c *Client) Submit(name string, opts []*UnitOption, targetState string) error {
 	unit := Unit{
 		Name:         name,
@@ -152,4 +182,6 @@ func (c *Client) Unload(name string) error {
 	return c.createOrUpdateUnit(unit)
 }
 
-func (c *Client) Destroy(name string) {}
+func (c *Client) Destroy(name string) error {
+	return c.deleteUnit(name)
+}
