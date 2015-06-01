@@ -78,10 +78,6 @@ func (c *Client) Submit(name string, opts []*UnitOption) error {
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode == 201 {
-		return nil
-	}
-
 	switch res.StatusCode {
 	case 201:
 		return nil
