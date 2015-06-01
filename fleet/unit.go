@@ -99,7 +99,7 @@ func (c *Client) createOrUpdateUnit(u Unit) error {
 		// Attempting to create an entity without options
 		return errors.New("409 Conflict")
 	default:
-		message := fmt.Sprintf("%d Faild to load an unit", res.StatusCode)
+		message := fmt.Sprintf("%d Faild to create/update an unit", res.StatusCode)
 		return errors.New(message)
 	}
 
