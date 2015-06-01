@@ -133,7 +133,6 @@ func (c *Client) deleteUnit(name string) error {
 	}
 
 	return nil
-
 }
 
 func (c *Client) Submit(name string, opts []*UnitOption, targetState string) error {
