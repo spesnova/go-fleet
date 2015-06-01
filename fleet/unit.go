@@ -99,7 +99,36 @@ func (c *Client) createOrUpdateUnit(u Unit) error {
 		// Attempting to create an entity without options
 		return errors.New("409 Conflict")
 	default:
-		message := fmt.Sprintf("%d Faild to load an unit", res.StatusCode)
+		message := fmt.Sprintf("%d Faild to create/update an unit", res.StatusCode)
+		return errors.New(message)
+	}
+
+	return nil
+}
+
+func (c *Client) deleteUnit(name string) error {
+	req, err := http.NewRequest("DELETE", c.URL+basePath+unitsPath+"/"+name, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	httpClient := http.Client{}
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	switch res.StatusCode {
+	case 204:
+		// Deleted successfully
+		return nil
+	case 404:
+		// The indicated Unit does not exist
+		return errors.New("400 Bad Request")
+	default:
+		message := fmt.Sprintf("%d Faild to delete an unit", res.StatusCode)
 		return errors.New(message)
 	}
 
@@ -134,6 +163,24 @@ func (c *Client) Start(name string) error {
 	return c.createOrUpdateUnit(unit)
 }
 
-func (c *Client) Stop(name string)    {}
-func (c *Client) Unload(name string)  {}
-func (c *Client) Destroy(name string) {}
+func (c *Client) Stop(name string) error {
+	unit := Unit{
+		Name:         name,
+		DesiredState: "loaded",
+	}
+
+	return c.createOrUpdateUnit(unit)
+}
+
+func (c *Client) Unload(name string) error {
+	unit := Unit{
+		Name:         name,
+		DesiredState: "inactive",
+	}
+
+	return c.createOrUpdateUnit(unit)
+}
+
+func (c *Client) Destroy(name string) error {
+	return c.deleteUnit(name)
+}
