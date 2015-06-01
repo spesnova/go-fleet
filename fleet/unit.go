@@ -126,7 +126,7 @@ func (c *Client) deleteUnit(name string) error {
 		return nil
 	case 404:
 		// The indicated Unit does not exist
-		return errors.New("400 Bad Request")
+		return errors.New("404 Not Found")
 	default:
 		message := fmt.Sprintf("%d Faild to delete an unit", res.StatusCode)
 		return errors.New(message)
