@@ -82,6 +82,20 @@ func (c *Client) Submit(name string, opts []*UnitOption) error {
 		return nil
 	}
 
+	switch res.StatusCode {
+	case 201:
+		return nil
+	case 400:
+		// Attempting to create an Unit with an invalid entity
+		return errors.New("400 Bad Request")
+	case 409:
+		// Attempting to create an entity without options
+		return errors.New("409 Conflict")
+	default:
+		message := fmt.Sprintf("%d Faild to load an unit", res.StatusCode)
+		return errors.New(message)
+	}
+
 	return nil
 }
 
