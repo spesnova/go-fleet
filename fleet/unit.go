@@ -135,11 +135,11 @@ func (c *Client) deleteUnit(name string) error {
 	return nil
 }
 
-func (c *Client) Submit(name string, opts []*UnitOption, targetState string) error {
+func (c *Client) Submit(name string, opts []*UnitOption) error {
 	unit := Unit{
 		Name:         name,
 		Options:      opts,
-		DesiredState: targetState,
+		DesiredState: "inactive",
 	}
 
 	return c.createOrUpdateUnit(unit)
