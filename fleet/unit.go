@@ -135,29 +135,40 @@ func (c *Client) deleteUnit(name string) error {
 	return nil
 }
 
-func (c *Client) Submit(name string, opts []*UnitOption, targetState string) error {
+func (c *Client) Submit(name string, opts []*UnitOption) error {
 	unit := Unit{
 		Name:         name,
 		Options:      opts,
-		DesiredState: targetState,
+		DesiredState: "inactive",
 	}
 
 	return c.createOrUpdateUnit(unit)
 }
 
-func (c *Client) Load(name string) error {
+func (c *Client) Load(name string, opts []*UnitOption) error {
 	unit := Unit{
 		Name:         name,
 		DesiredState: "loaded",
 	}
 
+	if len(opts) > 0 {
+		unit.Options = opts
+	}
+
 	return c.createOrUpdateUnit(unit)
 }
 
-func (c *Client) Start(name string) error {
+// Start sends HTTP request to fleet HTTP API to launch an unit.
+// If you want to submit and load and launch at once, pass UnitOption slice to opts.
+// Otherwise, set opts to nil.
+func (c *Client) Start(name string, opts []*UnitOption) error {
 	unit := Unit{
 		Name:         name,
 		DesiredState: "launched",
+	}
+
+	if len(opts) > 0 {
+		unit.Options = opts
 	}
 
 	return c.createOrUpdateUnit(unit)
