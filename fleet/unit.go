@@ -154,10 +154,17 @@ func (c *Client) Load(name string) error {
 	return c.createOrUpdateUnit(unit)
 }
 
-func (c *Client) Start(name string) error {
+// Start sends HTTP request to fleet HTTP API to launch an unit.
+// If you want to submit and load and launch at once, pass UnitOption slice to opts.
+// Otherwise, set opts to nil.
+func (c *Client) Start(name string, opts []*UnitOption) error {
 	unit := Unit{
 		Name:         name,
 		DesiredState: "launched",
+	}
+
+	if len(opts) > 0 {
+		unit.Options = opts
 	}
 
 	return c.createOrUpdateUnit(unit)
