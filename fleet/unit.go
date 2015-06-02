@@ -145,10 +145,14 @@ func (c *Client) Submit(name string, opts []*UnitOption) error {
 	return c.createOrUpdateUnit(unit)
 }
 
-func (c *Client) Load(name string) error {
+func (c *Client) Load(name string, opts []*UnitOption) error {
 	unit := Unit{
 		Name:         name,
 		DesiredState: "loaded",
+	}
+
+	if len(opts) > 0 {
+		unit.Options = opts
 	}
 
 	return c.createOrUpdateUnit(unit)
