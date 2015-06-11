@@ -14,6 +14,7 @@ package main
 
 import (
     "fmt"
+    "log"
 
     "github.com/spesnova/go-fleet/fleet"
 )
@@ -34,7 +35,7 @@ func main() {
 		},
 	}
 
-	err := c.Start("hello.service", opts)
+	err := client.Start("hello.service", opts)
 	if err != nil {
 		log.Fatal(err)
 	} else {
