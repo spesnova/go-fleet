@@ -12,6 +12,8 @@ const (
 	unitsPath = "/units"
 )
 
+var ERROR_UNIT_NOT_FOUND string = "Unit not found"
+
 type Unit struct {
 	Name         string        `json:"name,omitempty"`
 	Options      []*UnitOption `json:"options,omitempty"`
@@ -52,6 +54,35 @@ func (c *Client) Units() ([]Unit, error) {
 	}
 
 	return unitsRes.Units, nil
+}
+
+// Unit returns single unit by name @link https://github.com/coreos/fleet/blob/master/Documentation/api-v1.md#get-a-unit
+func (c *Client) Unit(name string) (*Unit, error) {
+	unit := &Unit{}
+
+	req, err := http.NewRequest("GET", c.URL+basePath+unitsPath+"/"+name, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	httpClient := http.Client{}
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == http.StatusOK {
+		return nil, errors.New(ERROR_UNIT_NOT_FOUND)
+	}
+
+	err = json.NewDecoder(res.Body).Decode(unit)
+	if err != nil {
+		return nil, err
+	}
+
+	return unit, nil
 }
 
 // createOrUpdateUnit creates or updates an unit
