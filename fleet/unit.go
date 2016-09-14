@@ -73,7 +73,7 @@ func (c *Client) Unit(name string) (*Unit, error) {
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode == http.StatusOK {
+	if res.StatusCode != http.StatusOK {
 		return nil, errors.New(ERROR_UNIT_NOT_FOUND)
 	}
 
