@@ -2,7 +2,10 @@ package fleet
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
+	"net/url"
 )
 
 const (
@@ -22,10 +25,39 @@ type UnitStatesResponse struct {
 	UnitStates []UnitState `json:"states,omitempty"`
 }
 
-func (c *Client) UnitStates() ([]UnitState, error) {
-	var statesRes UnitStatesResponse
+type UnitStateFilter struct {
+	UnitName  string
+	MachineID string
+}
 
-	req, err := http.NewRequest("GET", c.URL+basePath+statesPath, nil)
+// UnitStates return all unit states
+func (c *Client) UnitStates() ([]UnitState, error) {
+	return c.unitStateQuery("")
+}
+
+// UnitStateFiltered return unit states according to filter
+func (c *Client) UnitStateFiltered(filter *UnitStateFilter) ([]UnitState, error) {
+	queryString := ""
+	if filter != nil {
+		query := url.Values{}
+		if "" != filter.UnitName {
+			query.Set("unitName", filter.UnitName)
+		}
+
+		if "" != filter.MachineID {
+			query.Set("machineID", filter.MachineID)
+		}
+
+		queryString = "?" + query.Encode()
+	}
+
+	return c.unitStateQuery(queryString)
+}
+
+func (c *Client) unitStateQuery(queryString string) ([]UnitState, error) {
+	var statesRes = UnitStatesResponse{}
+
+	req, err := http.NewRequest("GET", c.URL+basePath+statesPath+queryString, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +70,12 @@ func (c *Client) UnitStates() ([]UnitState, error) {
 	}
 	defer res.Body.Close()
 
+	if res.StatusCode != http.StatusOK {
+		return statesRes.UnitStates, errors.New(fmt.Sprintf("Wrong status code: %d %s", res.StatusCode, res.Status))
+	}
+
 	err = json.NewDecoder(res.Body).Decode(&statesRes)
+
 	if err != nil {
 		return nil, err
 	}
