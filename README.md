@@ -1,6 +1,8 @@
 # go-fleet
 Go client library for fleet
 
+[![Build Status](https://travis-ci.org/obukhov/go-fleet.svg?branch=master)](https://travis-ci.org/obukhov/go-fleet)
+
 ## Install
 
 ```

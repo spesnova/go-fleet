@@ -32,14 +32,13 @@ type UnitStateFilter struct {
 
 // UnitStates return all unit states
 func (c *Client) UnitStates() ([]UnitState, error) {
-	return c.unitStateQuery("")
+	return c.unitStateQuery(url.Values{})
 }
 
 // UnitStateFiltered return unit states according to filter
 func (c *Client) UnitStateFiltered(filter *UnitStateFilter) ([]UnitState, error) {
-	queryString := ""
+	query := url.Values{}
 	if filter != nil {
-		query := url.Values{}
 		if "" != filter.UnitName {
 			query.Set("unitName", filter.UnitName)
 		}
@@ -47,24 +46,21 @@ func (c *Client) UnitStateFiltered(filter *UnitStateFilter) ([]UnitState, error)
 		if "" != filter.MachineID {
 			query.Set("machineID", filter.MachineID)
 		}
-
-		queryString = "?" + query.Encode()
 	}
 
-	return c.unitStateQuery(queryString)
+	return c.unitStateQuery(query)
 }
 
-func (c *Client) unitStateQuery(queryString string) ([]UnitState, error) {
+func (c *Client) unitStateQuery(query url.Values) ([]UnitState, error) {
 	var statesRes = UnitStatesResponse{}
 
-	req, err := http.NewRequest("GET", c.URL+basePath+statesPath+queryString, nil)
+	req, err := c.createRequest("GET", statesPath, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.URL.RawQuery = query.Encode()
 
-	httpClient := http.Client{}
-	res, err := httpClient.Do(req)
+	res, err := c.requestSender.send(req)
 	if err != nil {
 		return nil, err
 	}
