@@ -58,24 +58,33 @@ func TestClient_Machines(t *testing.T) {
 		t.Error("Content-Type header must be application/json")
 	}
 
+	expectedMachines := []Machine{
+		{
+			ID:        "4b3c49d6f2b14c4e84fb2eea0bdbb0f3",
+			PrimaryIP: "172.17.8.102",
+		},
+		{
+			ID:        "90eeaaea56c84a98a6c20cc1cd756d0f",
+			PrimaryIP: "172.17.8.103",
+		},
+		{
+			ID:        "b6c55728e762434e9e56f23612afba1d",
+			PrimaryIP: "172.17.8.101",
+		},
+	}
+
 	if len(machines) != 3 {
 		t.Error("Return slice must contain exactly 3 items")
 	}
 
-	if machines[0].ID != "4b3c49d6f2b14c4e84fb2eea0bdbb0f3" {
-		t.Error("Wrong machine 0 ID")
-	}
+	for key, expectedMachine := range expectedMachines {
+		if machines[key].ID != expectedMachine.ID {
+			t.Errorf("Wrong machine %d ID", key)
+		}
 
-	if machines[0].PrimaryIP != "172.17.8.102" {
-		t.Error("Wrong machine 0 PrimaryIP")
-	}
-
-	if machines[2].ID != "b6c55728e762434e9e56f23612afba1d" {
-		t.Error("Wrong machine 2 ID")
-	}
-
-	if machines[2].PrimaryIP != "172.17.8.101" {
-		t.Error("Wrong machine 2 PrimaryIP")
+		if machines[key].PrimaryIP != expectedMachine.PrimaryIP {
+			t.Errorf("Wrong machine %d PrimaryIP", key)
+		}
 	}
 }
 
