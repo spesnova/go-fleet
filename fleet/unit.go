@@ -12,7 +12,7 @@ const (
 	unitsPath = "/units"
 )
 
-var ERROR_UNIT_NOT_FOUND string = "Unit not found"
+var ERROR_UNIT_NOT_FOUND string = "404 Not Found"
 
 type Unit struct {
 	Name         string        `json:"name,omitempty"`
@@ -35,14 +35,12 @@ type unitResponse struct {
 func (c *Client) Units() ([]Unit, error) {
 	var unitsRes unitResponse
 
-	req, err := http.NewRequest("GET", c.URL+basePath+unitsPath, nil)
+	req, err := c.createRequest("GET", unitsPath, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
 
-	httpClient := http.Client{}
-	res, err := httpClient.Do(req)
+	res, err := c.requestSender.send(req)
 	if err != nil {
 		return nil, err
 	}
@@ -60,14 +58,12 @@ func (c *Client) Units() ([]Unit, error) {
 func (c *Client) Unit(name string) (*Unit, error) {
 	unit := &Unit{}
 
-	req, err := http.NewRequest("GET", c.URL+basePath+unitsPath+"/"+name, nil)
+	req, err := c.createRequest("GET", unitsPath+"/"+name, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
 
-	httpClient := http.Client{}
-	res, err := httpClient.Do(req)
+	res, err := c.requestSender.send(req)
 	if err != nil {
 		return nil, err
 	}
@@ -103,14 +99,12 @@ func (c *Client) createOrUpdateUnit(u Unit) error {
 		return err
 	}
 
-	req, err := http.NewRequest("PUT", c.URL+basePath+unitsPath+"/"+u.Name, bytes.NewReader(j))
+	req, err := c.createRequest("PUT", unitsPath+"/"+u.Name, bytes.NewReader(j))
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json")
 
-	httpClient := http.Client{}
-	res, err := httpClient.Do(req)
+	res, err := c.requestSender.send(req)
 	if err != nil {
 		return err
 	}
@@ -138,14 +132,12 @@ func (c *Client) createOrUpdateUnit(u Unit) error {
 }
 
 func (c *Client) deleteUnit(name string) error {
-	req, err := http.NewRequest("DELETE", c.URL+basePath+unitsPath+"/"+name, nil)
+	req, err := c.createRequest("DELETE", unitsPath+"/"+name, nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json")
 
-	httpClient := http.Client{}
-	res, err := httpClient.Do(req)
+	res, err := c.requestSender.send(req)
 	if err != nil {
 		return err
 	}
@@ -157,7 +149,7 @@ func (c *Client) deleteUnit(name string) error {
 		return nil
 	case 404:
 		// The indicated Unit does not exist
-		return errors.New("404 Not Found")
+		return errors.New(ERROR_UNIT_NOT_FOUND)
 	default:
 		message := fmt.Sprintf("%d Faild to delete an unit", res.StatusCode)
 		return errors.New(message)

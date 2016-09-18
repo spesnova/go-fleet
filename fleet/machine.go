@@ -2,7 +2,6 @@ package fleet
 
 import (
 	"encoding/json"
-	"net/http"
 )
 
 const (
@@ -22,13 +21,12 @@ type machinesResponse struct {
 func (c *Client) Machines() ([]Machine, error) {
 	var mRes machinesResponse
 
-	req, err := http.NewRequest("GET", c.URL+basePath+machinesPath, nil)
+	req, err := c.createRequest("GET", machinesPath, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	httpClient := http.Client{}
-	res, err := httpClient.Do(req)
+	res, err := c.requestSender.send(req)
 	if err != nil {
 		return nil, err
 	}
