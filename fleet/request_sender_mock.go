@@ -9,8 +9,7 @@ type requestSenderMock struct {
 }
 
 func (rs *requestSenderMock) send(req *http.Request) (resp *http.Response, err error) {
-	rs.httpRequest = rs.httpRequest
+	rs.httpRequest = req
 
 	return rs.httpResponse, rs.err
 }
-

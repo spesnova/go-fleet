@@ -39,7 +39,7 @@ func NewValidClient(rawUrl string) (*Client, error) {
 		return nil, client.Error()
 	}
 
-	return  client, nil
+	return client, nil
 }
 
 func (c *Client) Error() error {

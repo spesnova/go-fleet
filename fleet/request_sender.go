@@ -13,4 +13,3 @@ type httpRequestSender struct {
 func (rs *httpRequestSender) send(req *http.Request) (resp *http.Response, err error) {
 	return rs.client.Do(req)
 }
-
