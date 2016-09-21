@@ -27,3 +27,17 @@ func TestNewClientInValid(t *testing.T) {
 		t.Error("Client supposed to be nil")
 	}
 }
+
+func TestCreateRequest(t *testing.T) {
+	client := NewClient("http://valid-url.com:5000/fleet")
+
+	req, err := client.createRequest("\u2318", "/units", nil)
+
+	if nil == err {
+		t.Error("Error supposed not to be nil")
+	}
+
+	if nil != req {
+		t.Error("Request supposed to be nil")
+	}
+}

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+	"errors"
 )
 
 func TestClient_Machines(t *testing.T) {
@@ -86,6 +87,29 @@ func TestClient_Machines(t *testing.T) {
 			t.Errorf("Wrong machine %d PrimaryIP", key)
 		}
 	}
+}
+
+func TestClient_MachinesRequestError(t *testing.T) {
+	baseUrl, _ := url.ParseRequestURI("http://fleet.example.com:4001/")
+	senderMock := &requestSenderMock{
+		err: errors.New("Request failed"),
+	}
+
+	client := &Client{
+		baseUrl:       baseUrl,
+		requestSender: senderMock,
+	}
+
+	machines, err := client.Machines()
+
+	if err == nil {
+		t.Error("Error supposed not to be nil")
+	}
+
+	if len(machines) > 0 {
+		t.Error("Machines supposed to be empty")
+	}
+
 }
 
 func TestClient_MachinesInvalidJsonError(t *testing.T) {
