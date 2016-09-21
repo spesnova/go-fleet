@@ -1,6 +1,9 @@
 # go-fleet
 Go client library for fleet
 
+[![Build Status](https://travis-ci.org/obukhov/go-fleet.svg?branch=master)](https://travis-ci.org/obukhov/go-fleet)
+[![Coverage Status](https://coveralls.io/repos/github/obukhov/go-fleet/badge.svg?branch=master)](https://coveralls.io/github/obukhov/go-fleet?branch=master)
+
 ## Install
 
 ```
