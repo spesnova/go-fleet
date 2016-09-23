@@ -1,10 +1,5 @@
 package fleet
 
-import (
-	"encoding/json"
-	"net/http"
-)
-
 const (
 	machinesPath = "/machines"
 )
@@ -20,24 +15,17 @@ type machinesResponse struct {
 }
 
 func (c *Client) Machines() ([]Machine, error) {
-	var mRes machinesResponse
+	var mResp machinesResponse
 
-	req, err := http.NewRequest("GET", c.URL+basePath+machinesPath, nil)
+	req, err := c.NewRequest("GET", machinesPath, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	httpClient := http.Client{}
-	res, err := httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	err = json.NewDecoder(res.Body).Decode(&mRes)
+	_, err = c.Do(req, &mResp)
 	if err != nil {
 		return nil, err
 	}
 
-	return mRes.Machines, nil
+	return mResp.Machines, nil
 }

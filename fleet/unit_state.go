@@ -1,10 +1,6 @@
 package fleet
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"net/http"
 	"net/url"
 )
 
@@ -25,60 +21,37 @@ type UnitStatesResponse struct {
 	UnitStates []UnitState `json:"states,omitempty"`
 }
 
-type UnitStateFilter struct {
-	UnitName  string
+type UnitStatesFilter struct {
 	MachineID string
+	UnitName  string
 }
 
-// UnitStates return all unit states
-func (c *Client) UnitStates() ([]UnitState, error) {
-	return c.unitStateQuery("")
-}
+func (c *Client) UnitStates(filter *UnitStatesFilter) ([]UnitState, error) {
+	var statesResp UnitStatesResponse
 
-// UnitStateFiltered return unit states according to filter
-func (c *Client) UnitStateFiltered(filter *UnitStateFilter) ([]UnitState, error) {
 	queryString := ""
-	if filter != nil {
+	if filter.MachineID != "" || filter.UnitName != "" {
 		query := url.Values{}
-		if "" != filter.UnitName {
-			query.Set("unitName", filter.UnitName)
+		if filter.MachineID != "" {
+			query.Set("machineID", filter.MachineID)
 		}
 
-		if "" != filter.MachineID {
-			query.Set("machineID", filter.MachineID)
+		if filter.UnitName != "" {
+			query.Set("unitName", filter.UnitName)
 		}
 
 		queryString = "?" + query.Encode()
 	}
 
-	return c.unitStateQuery(queryString)
-}
-
-func (c *Client) unitStateQuery(queryString string) ([]UnitState, error) {
-	var statesRes = UnitStatesResponse{}
-
-	req, err := http.NewRequest("GET", c.URL+basePath+statesPath+queryString, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	httpClient := http.Client{}
-	res, err := httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return statesRes.UnitStates, errors.New(fmt.Sprintf("Wrong status code: %d %s", res.StatusCode, res.Status))
-	}
-
-	err = json.NewDecoder(res.Body).Decode(&statesRes)
-
+	req, err := c.NewRequest("GET", statesPath+queryString, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return statesRes.UnitStates, nil
+	_, err = c.Do(req, &statesResp)
+	if err != nil {
+		return nil, err
+	}
+
+	return statesResp.UnitStates, nil
 }

@@ -4,15 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"net/http"
 )
 
 const (
 	unitsPath = "/units"
 )
-
-var ERROR_UNIT_NOT_FOUND string = "Unit not found"
 
 type Unit struct {
 	Name         string        `json:"name,omitempty"`
@@ -28,56 +24,37 @@ type UnitOption struct {
 	Value   string `json:"value,omitempty"`
 }
 
-type unitResponse struct {
+type unitsResponse struct {
 	Units []Unit `json:"units,omitempty"`
 }
 
 func (c *Client) Units() ([]Unit, error) {
-	var unitsRes unitResponse
+	var unitsResp unitsResponse
 
-	req, err := http.NewRequest("GET", c.URL+basePath+unitsPath, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	httpClient := http.Client{}
-	res, err := httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	err = json.NewDecoder(res.Body).Decode(&unitsRes)
+	req, err := c.NewRequest("GET", unitsPath, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return unitsRes.Units, nil
+	_, err = c.Do(req, &unitsResp)
+	if err != nil {
+		return nil, err
+	}
+
+	return unitsResp.Units, nil
 }
 
-// Unit returns single unit by name @link https://github.com/coreos/fleet/blob/master/Documentation/api-v1.md#get-a-unit
+// Unit returns single unit by name
+// fleet API docs: https://github.com/coreos/fleet/blob/master/Documentation/api-v1.md#get-a-unit
 func (c *Client) Unit(name string) (*Unit, error) {
 	unit := &Unit{}
 
-	req, err := http.NewRequest("GET", c.URL+basePath+unitsPath+"/"+name, nil)
+	req, err := c.NewRequest("GET", unitsPath+"/"+name, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
 
-	httpClient := http.Client{}
-	res, err := httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.New(ERROR_UNIT_NOT_FOUND)
-	}
-
-	err = json.NewDecoder(res.Body).Decode(unit)
+	_, err = c.Do(req, &unit)
 	if err != nil {
 		return nil, err
 	}
@@ -103,64 +80,14 @@ func (c *Client) createOrUpdateUnit(u Unit) error {
 		return err
 	}
 
-	req, err := http.NewRequest("PUT", c.URL+basePath+unitsPath+"/"+u.Name, bytes.NewReader(j))
+	req, err := c.NewRequest("PUT", unitsPath+"/"+u.Name, bytes.NewReader(j))
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json")
 
-	httpClient := http.Client{}
-	res, err := httpClient.Do(req)
+	_, err = c.Do(req, nil)
 	if err != nil {
 		return err
-	}
-	defer res.Body.Close()
-
-	switch res.StatusCode {
-	case 201:
-		// Created successfully
-		return nil
-	case 204:
-		// Modified successfully
-		return nil
-	case 400:
-		// Attempting to create/modify an Unit with an invalid entity
-		return errors.New("400 Bad Request")
-	case 409:
-		// Attempting to create an entity without options
-		return errors.New("409 Conflict")
-	default:
-		message := fmt.Sprintf("%d Faild to create/update an unit", res.StatusCode)
-		return errors.New(message)
-	}
-
-	return nil
-}
-
-func (c *Client) deleteUnit(name string) error {
-	req, err := http.NewRequest("DELETE", c.URL+basePath+unitsPath+"/"+name, nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	httpClient := http.Client{}
-	res, err := httpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	switch res.StatusCode {
-	case 204:
-		// Deleted successfully
-		return nil
-	case 404:
-		// The indicated Unit does not exist
-		return errors.New("404 Not Found")
-	default:
-		message := fmt.Sprintf("%d Faild to delete an unit", res.StatusCode)
-		return errors.New(message)
 	}
 
 	return nil
@@ -221,6 +148,20 @@ func (c *Client) Unload(name string) error {
 	}
 
 	return c.createOrUpdateUnit(unit)
+}
+
+func (c *Client) deleteUnit(name string) error {
+	req, err := c.NewRequest("DELETE", unitsPath+"/"+name, nil)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.Do(req, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Client) Destroy(name string) error {
